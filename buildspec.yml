@@ -10,37 +10,37 @@ phases:
     commands:
       - echo logging in to ecr...
       - >
-        aws ecr get-login-password --region $AWS_REGION \
-          | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.$AWS_REGION.amazonaws.com
-      - docker pull ${AWS_ACCOUNT_ID}.dkr.ecr.$AWS_REGION.amazonaws.com/backend:prod || true
-      - docker pull ${AWS_ACCOUNT_ID}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:builder || true
-      - docker pull ${AWS_ACCOUNT_ID}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:prod || true
+        aws ecr get-login-password --region ${AWS_REGION} \
+          | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+      - docker pull ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/backend:prod || true
+      - docker pull ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend:builder || true
+      - docker pull ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend:prod || true
   build:
     commands:
       - echo building images app-backend, app-frontend
       - >
         docker build \
-          --cache-from ${AWS_ACCOUNT_ID}.dkr.ecr.$AWS_REGION.amazonaws.com/backend:prod \
+          --cache-from ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/backend:prod \
           -f project/backend/Dockerfile.prod \
-          -t ${AWS_ACCOUNT_ID}.dkr.ecr.$AWS_REGION.amazonaws.com/backend:prod \
+          -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/backend:prod \
           ./project/backend
       - >
         docker build \
           --target builder \
-          --cache-from ${AWS_ACCOUNT_ID}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:builder \
+          --cache-from ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend:builder \
           -f project/frontend/Dockerfile.prod \
-          -t ${AWS_ACCOUNT_ID}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:builder \
+          -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend:builder \
           --build-arg NODE_ENV=production \
           --build-arg REACT_APP_API_SERVICE_URL=$REACT_APP_API_SERVICE_URL \
           ./project/frontend
       - >
         docker build \
-          --cache-from ${AWS_ACCOUNT_ID}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:prod \
+          --cache-from ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend:prod \
           -f project/frontend/Dockerfile.prod \
-          -t ${AWS_ACCOUNT_ID}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:prod \
+          -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend:prod \
           ./project/frontend
   post_build:
     commands:
-      - docker push ${AWS_ACCOUNT_ID}.dkr.ecr.$AWS_REGION.amazonaws.com/backend:prod
-      - docker push ${AWS_ACCOUNT_ID}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:builder
-      - docker push ${AWS_ACCOUNT_ID}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:prod
+      - docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/backend:prod
+      - docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend:builder
+      - docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend:prod
