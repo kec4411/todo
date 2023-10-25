@@ -21,24 +21,24 @@ phases:
       - >
         docker build \
           --cache-from ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/backend:prod \
-          -f project/backend/Dockerfile.prod \
+          -f web-ocr/backend/Dockerfile.prod \
           -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/backend:prod \
-          ./project/backend
+          ./web-ocr/backend
       - >
         docker build \
           --target builder \
           --cache-from ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend:builder \
-          -f project/frontend/Dockerfile.prod \
+          -f web-ocr/frontend/Dockerfile.prod \
           -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend:builder \
           --build-arg NODE_ENV=production \
           --build-arg REACT_APP_API_SERVICE_URL=$REACT_APP_API_SERVICE_URL \
-          ./project/frontend
+          ./web-ocr/frontend
       - >
         docker build \
           --cache-from ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend:prod \
-          -f project/frontend/Dockerfile.prod \
+          -f web-ocr/frontend/Dockerfile.prod \
           -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend:prod \
-          ./project/frontend
+          ./web-ocr/frontend
   post_build:
     commands:
       - docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/backend:prod
