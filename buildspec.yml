@@ -3,7 +3,7 @@ version: 0.2
 env:
   variables:
     AWS_REGION: "ap-northeast-1"
-    REACT_APP_API_SERVICE_URL: "http://hoge-655470985.ap-northeast-1.elb.amazonaws.com"
+    REACT_APP_API_SERVICE_URL: "http://ecs-alb-580115360.ap-northeast-1.elb.amazonaws.com"
 
 phases:
   pre_build:
