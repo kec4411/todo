@@ -11,7 +11,13 @@ ENV PYTHONUNBUFFERED 1
 #install system depedencies
 RUN apt-get update \
   && apt-get -y install netcat gcc postgresql \
+  && apt-get -y install tesseract-ocr \
   && apt-get clean
+
+RUN apt update \
+  && apt upgrade -y \
+  && apt install -y build-essential \
+  && apt install -y python3-opencv 
 
 #install python depedencies
 RUN pip install --upgrade pip

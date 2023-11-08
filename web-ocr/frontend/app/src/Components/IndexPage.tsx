@@ -1,239 +1,163 @@
-import React, {ChangeEvent, memo, useCallback, useEffect, useState, ReactNode, VFC} from "react";
+import { useState, useCallback, useMemo, memo, VFC } from "react";
 import {
-    Box,
-    Button,
-    Divider,
-    Flex,
-    Heading,
-    Input,
-    Stack,
-    Text,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    useDisclosure, ModalHeader, ModalCloseButton, ModalBody, FormControl, FormLabel, ModalFooter, FormHelperText,
-} from "@chakra-ui/react";
-import { TodoType } from "../types/api/TodoType";
+  ChakraProvider,
+  Heading,
+  Button,
+  Box,
+  Text,
+  Link,
+  Grid,
+  GridItem,
+  Editable,
+  EditableTextarea,
+  EditablePreview,
+  theme,
+  Center,
+  Image
+} from '@chakra-ui/react';
 
+import axios from "axios";
+import { useDropzone } from "react-dropzone";
+
+const baseStyle = {
+  height: '80%',
+  transition: '0.2s ease-in-out'
+};
+
+const borderNormalStyle = {
+  border: '3px',
+  borderStyle: 'dotted',
+  borderColor: 'gray',
+};
+const borderDragStyle = {
+  border: '5px',
+  borderStyle: 'solid',
+  borderColor: 'pink',
+};
 
 export const IndexPage: VFC = memo(() => {
-    const [todoName, setTodoName] = useState('');
-    const [todos, setTodos] = useState<Array<TodoType>>([]);
-    const onChangeTask = (e: ChangeEvent<HTMLInputElement>) => setTodoName(e.target.value);
+  const [fileUrl, setFileUrl] = useState();
+  const [ocrText, setOcrText] = useState();
+  const [ isLoading, setIsLoading ] = useState(false);
 
-    const getTodos = useCallback(async() => {
-        const response: Response = await fetch(process.env.REACT_APP_API_SERVICE_URL + "/todos")
-        await response.json()
-            .then((r) => {
-                setTodos(r)
-            })
-            .catch(() => {
-                alert("undefined get Reasponse...")
-            });
-    },[]);
+  const onDrop = useCallback((acceptedFiles: any) => {
+    console.log("acceptedFiles:", acceptedFiles);
+    if (acceptedFiles.length > 0) {
+      const src:any = URL.createObjectURL(acceptedFiles[0]);
+      setFileUrl(src);
+      // setUploadFile(acceptedFiles[0]);
+    }
+  }, []);
 
-    const onClickAddTodo = () => {
-        if (todoName === "") return;
-        const newTodo = {
-            "id": todos.length + 1,
-            "summary": todoName
-        }
-        fetch(process.env.REACT_APP_API_SERVICE_URL + "/todos", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newTodo)
-        }).then(() => {
-            getTodos();
-        }).catch(() => {
-            alert("unknown posted error")
-        })
-        setTodoName("");
-    };
+  const {
+    getRootProps,
+    getInputProps,
+    isDragActive,
+    open,
+    acceptedFiles
+  } = useDropzone({
+    onDrop,
+    noClick: true
+  });
 
-    useEffect( () => {
-        getTodos();
-    },[getTodos]);
+  const style = useMemo(
+    () => ({
+      ...baseStyle,
+      ...(isDragActive ? borderDragStyle : borderNormalStyle)
+    }),
+    [isDragActive]
+  );
 
+  const postImage = async () => {
+    setIsLoading(true);
+    const url = process.env.REACT_APP_API_SERVICE_URL + "/convert/";
+    const data = new FormData();
+    data.append('file', acceptedFiles[0]);
+    const headers = { "content-type": "multipart/form-data" };
+    axios
+      .post( url, data, { headers })
+      .then((res) => {
+        console.log(res.data.ocrresult);
+        setOcrText(res.data.ocrresult);
+        setIsLoading(false);
+      })
+      .catch(err =>{
+        console.log(err);
+        setIsLoading(false);
+      } );
+    }
 
-    return (
-        <Flex
-            align="center"
-            color="gray.500"
-            height="100vh"
-            justify="center"
-        >
-            <Box
-                w="400">
-                <Stack spacing={6}>
-                    <Heading
-                        as="h1"
-                        size="lg"
-                        textAlign="center"
-                    >TodoApp
-                    </Heading>
-                    <Box w={400}>
-                        <Stack>
-                            <Input
-                                placeholder="Input taskname.."
-                                value={todoName}
-                                onChange={onChangeTask}
-                            />
-                            <Button
-                                colorScheme="teal"
-                                onClick={onClickAddTodo}
-                            >Add</Button>
-                            <Divider my={"5"}/>
-                        </Stack>
-                    </Box>
-                    {todos.map((todo) => (
-                        <Todo
-                            key={todo.summary}
-                            id={todo.id}
-                            item={todo.summary}
-                            getTodos={getTodos}
-                        />
-                    ))}
-                </Stack>
+  return (
+    <ChakraProvider theme={theme}>
+      <Heading bg='green.700' color='white'>WEB OCR</Heading>
+      <Grid
+        h='600px'
+        templateRows='repeat(3, 1fr)'
+        templateColumns='repeat(7, 1fr)'
+        gap={4}
+      >
+        <GridItem rowSpan={1} colSpan={7}>
+          <Center h='100%'>
+            <Box {...getRootProps({ style })} borderRadius='10'>
+              <Center>
+                <input {...getInputProps()} />
+                  <Text>ここにファイルをドラッグ＆ドロップするか、
+                    <Link color='teal.500' onClick={open}>ファイルを選択</Link>
+                    してください。
+                  </Text>
+              </Center>
             </Box>
-        </Flex>
-    )
+          </Center>
+        </GridItem>
+
+        <GridItem rowSpan={2} colSpan={3}>
+          <Heading fontSize='md'>・画像プレビュー</Heading>
+            <Center h='100%'>
+              <Box w='95%' h='95%' bg='white' border='1px' borderColor='lightgray' borderRadius='10' boxShadow='xl'>
+                <Center h='100%'>
+                  <Image src={fileUrl} alt="" width="90%" margin='auto' />
+                </Center>
+              </Box>
+            </Center>
+        </GridItem>
+
+        <GridItem rowSpan={2} colSpan={1} >
+          <Center h='100%'>
+            { isLoading ?
+              <Button
+                isLoading
+                loadingText='読み取り中'
+                colorScheme='teal'
+                variant='outline'
+                spinnerPlacement='start'
+                boxShadow='xl'
+              />
+              :
+              <Button
+                type="button"
+                colorScheme="green"
+                onClick={postImage}
+                className="btn btn-primary align-self-center"
+                boxShadow='xl'
+                >
+                読み取り開始
+              </Button>
+            }
+          </Center>
+        </GridItem>
+        
+        <GridItem rowSpan={2} colSpan={3}>
+          <Heading fontSize='md'>・読み取り結果</Heading>
+            <Box w='95%' h='95%' bg='white' border='1px' borderColor='lightgray' borderRadius='10' boxShadow='xl'>
+              <Editable value={ocrText} h='100%' whiteSpace='pre-wrap'>
+                <EditablePreview h='100%'/>
+                <EditableTextarea h='100%'/>
+              </Editable>
+            </Box>
+        </GridItem>
+      </Grid>
+    </ChakraProvider>
+  );
 });
 
-
-type Props = {
-    key: string;
-    id: number;
-    item: string;
-    getTodos: () => void;
-}
-
-const Todo: VFC<Omit<Props, "key">> = memo((props) => {
-    const { id, item, getTodos } = props;
-
-    return (
-        <>
-            <Box>
-                <Text>{item}</Text>
-                <UpdateTodo
-                    id={id}
-                    item={item}
-                    getTodos={getTodos}
-                >Update</UpdateTodo>
-                <DeletedTodo
-                    id={id}
-                    item={item}
-                    getTodos={getTodos}
-                >Delete</DeletedTodo>
-            </Box>
-        </>
-    );
-});
-
-type UpdateProps = {
-    id: number;
-    item: string;
-    getTodos: () => void;
-    children: ReactNode;
-}
-
-const UpdateTodo: VFC<UpdateProps> = (props) => {
-    const { id, item, getTodos, children } = props;
-    const [ todo, setTodo ] = useState(item);
-    const { isOpen, onOpen, onClose } = useDisclosure();
-    const onClickModalOpen = useCallback(() => onOpen(), [])
-
-    const onChangeTodo = (e: ChangeEvent<HTMLInputElement>) => setTodo(e.target.value);
-    const onClickUpdateTodo  = async(id: number, item: string) => {
-        await fetch(process.env.REACT_APP_API_SERVICE_URL + `/todos/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ summary: item })
-        })
-        onClose();
-        getTodos();
-    };
-
-    return (
-        <>
-            <Modal
-                isOpen={isOpen}
-                onClose={onClose}
-                autoFocus={false}
-            >
-                <ModalOverlay>
-                    <ModalContent>
-                        <ModalHeader>Task Update</ModalHeader>
-                        <ModalCloseButton/>
-                        <ModalBody>
-                            <Stack>
-                                <FormControl>
-                                    <FormLabel>Task rename</FormLabel>
-                                    <Input
-                                        value={todo}
-                                        onChange={onChangeTodo}
-                                    ></Input>
-                                </FormControl>
-                            </Stack>
-                        </ModalBody>
-                        <ModalFooter>
-                            <Button onClick={() => onClickUpdateTodo(id, todo)}>Done</Button>
-                        </ModalFooter>
-                    </ModalContent>
-                </ModalOverlay>
-            </Modal>
-            <Button mr="2" onClick={onClickModalOpen}>{children}</Button>
-        </>
-    );
-};
-
-type DeletedProps = {
-    id: number;
-    item: string;
-    getTodos: () => void;
-    children: ReactNode;
-}
-
-const DeletedTodo: VFC<DeletedProps> = (props) => {
-    const { id, item, getTodos, children } = props;
-    const { isOpen, onOpen, onClose } = useDisclosure();
-    const onClickModalOpen = useCallback(() => onOpen(), [])
-
-    const onClickDeletedTodo  = async(id: number) => {
-        await fetch(process.env.REACT_APP_API_SERVICE_URL + `/todos/${id}`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" }
-        })
-        onClose();
-        getTodos();
-    };
-
-    return (
-        <>
-            <Modal
-                isOpen={isOpen}
-                onClose={onClose}
-                autoFocus={false}
-            >
-                <ModalOverlay>
-                    <ModalContent>
-                        <ModalHeader>Task Delete</ModalHeader>
-                        <ModalCloseButton/>
-                        <ModalBody>
-                            <Stack>
-                                <FormControl>
-                                    <FormLabel>this task delete?</FormLabel>
-                                    <FormHelperText>{item}</FormHelperText>
-                                </FormControl>
-                            </Stack>
-                        </ModalBody>
-                        <ModalFooter>
-                            <Button onClick={() => onClickDeletedTodo(id)}>Done</Button>
-                        </ModalFooter>
-                    </ModalContent>
-                </ModalOverlay>
-            </Modal>
-            <Button onClick={onClickModalOpen}>{children}</Button>
-        </>
-    );
-};
-
+// export default IndexPage;

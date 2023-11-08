@@ -10,7 +10,7 @@ services:
     volumes:
       - ./web-ocr/backend:/usr/src/
     environment:
-      - DATABASE_URL=postgres://postgres:postgres@web-db:5432/develop
+      - DATABASE_URL=postgres://postgres:postgres@web-db:5432/web_prod
     ports:
       - 8004:8000
     depends_on:
