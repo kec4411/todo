@@ -22,7 +22,7 @@ export const IndexPage: VFC = memo(() => {
     const onChangeTask = (e: ChangeEvent<HTMLInputElement>) => setTodoName(e.target.value);
 
     const getTodos = useCallback(async() => {
-        const response: Response = await fetch("http://localhost:8004/todos")
+        const response: Response = await fetch(process.env.REACT_APP_API_SERVICE_URL + "/todos")
         await response.json()
             .then((r) => {
                 setTodos(r)
@@ -38,7 +38,7 @@ export const IndexPage: VFC = memo(() => {
             "id": todos.length + 1,
             "summary": todoName
         }
-        fetch("http://localhost:8004/todos", {
+        fetch(process.env.REACT_APP_API_SERVICE_URL + "/todos", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newTodo)
@@ -144,7 +144,7 @@ const UpdateTodo: VFC<UpdateProps> = (props) => {
 
     const onChangeTodo = (e: ChangeEvent<HTMLInputElement>) => setTodo(e.target.value);
     const onClickUpdateTodo  = async(id: number, item: string) => {
-        await fetch(`http://localhost:8004/todos/${id}`, {
+        await fetch(process.env.REACT_APP_API_SERVICE_URL + `/todos/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ summary: item })
@@ -199,7 +199,7 @@ const DeletedTodo: VFC<DeletedProps> = (props) => {
     const onClickModalOpen = useCallback(() => onOpen(), [])
 
     const onClickDeletedTodo  = async(id: number) => {
-        await fetch(`http://localhost:8004/todos/${id}`, {
+        await fetch(process.env.REACT_APP_API_SERVICE_URL + `/todos/${id}`, {
             method: "DELETE",
             headers: { "Content-Type": "application/json" }
         })
