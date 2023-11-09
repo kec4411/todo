@@ -32,12 +32,11 @@ app = FastAPI()
 origins = [
     "*",
     "localhost:3000",
-    "http://ecs-alb-580115360.ap-northeast-1.elb.amazonaws.com/",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
