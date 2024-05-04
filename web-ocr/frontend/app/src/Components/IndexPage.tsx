@@ -1,9 +1,10 @@
-import { useState, useCallback, useMemo, memo, VFC } from "react";
+import { useState, useCallback, useMemo, memo, useRef, VFC } from "react";
 import {
   ChakraProvider,
   Heading,
   Button,
   Box,
+  Select,
   Text,
   Link,
   Grid,
@@ -38,6 +39,7 @@ const borderDragStyle = {
 export const IndexPage: VFC = memo(() => {
   const [fileUrl, setFileUrl] = useState();
   const [ocrText, setOcrText] = useState();
+  const [langType, setLangType] = useState('0');
   const [ isLoading, setIsLoading ] = useState(false);
 
   const onDrop = useCallback((acceptedFiles: any) => {
@@ -68,9 +70,14 @@ export const IndexPage: VFC = memo(() => {
     [isDragActive]
   );
 
+  const handleChange = (e: any) => {
+    setLangType(e.target.value);
+  }
+
   const postImage = async () => {
     setIsLoading(true);
-    const url = process.env.REACT_APP_API_SERVICE_URL + "/convert/";
+    const lang_type = langType;
+    const url = process.env.REACT_APP_API_SERVICE_URL + "/convert/?lang_type=" + lang_type;
     const data = new FormData();
     data.append('file', acceptedFiles[0]);
     const headers = { "content-type": "multipart/form-data" };
@@ -121,7 +128,7 @@ export const IndexPage: VFC = memo(() => {
             </Center>
         </GridItem>
 
-        <GridItem rowSpan={2} colSpan={1} >
+        <GridItem rowSpan={1} colSpan={1} >
           <Center h='100%'>
             { isLoading ?
               <Button
@@ -155,6 +162,15 @@ export const IndexPage: VFC = memo(() => {
               </Editable>
             </Box>
         </GridItem>
+
+        <GridItem rowSpan={1} colSpan={1} >
+          <Center>
+            <Select onChange={handleChange}>
+              <option value='0'>en - English</option>
+              <option value='1'>ja - 日本語</option>
+            </Select>
+          </Center>
+        </GridItem> 
       </Grid>
     </ChakraProvider>
   );

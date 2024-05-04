@@ -14,6 +14,7 @@ ENV PYTHONUNBUFFERED 1
 RUN apt-get update \
   && apt-get -y install netcat gcc postgresql \
   && apt-get -y install tesseract-ocr \
+  && apt-get -y install tesseract-ocr-jpn \
   && apt-get clean
 
 RUN apt update \

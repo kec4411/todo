@@ -1,8 +1,11 @@
 # project/backend/app/main.py
 import logging
 import os
+from typing import Union
 
-from fastapi import FastAPI, HTTPException, Path
+from fastapi import Depends, FastAPI, HTTPException, Path, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
 from typing import List
 
 from fastapi import FastAPI, File, UploadFile, File, HTTPException, Response
@@ -26,7 +29,6 @@ from app.models.pydantic import SummaryPayloadSchema, SummaryResponseSchema
 
 log = logging.getLogger("uvicorn")
 
-
 app = FastAPI()
 
 origins = [
@@ -42,20 +44,18 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-class TestParam(BaseModel):
-    param1 : str
-    param2 : str
 
 @app.get("/")
 def get_root():
-    return {"message": "fastapi sample"}
+    return {"message": "Health check OK."}
+
 
 @app.post("/uploadfile/")
 async def create_upload_file(file: UploadFile = File(...)):
     return {"filename": file.filename}
 
 @app.post("/convert/")
-def convert(file: UploadFile = File(...)):
+def convert(file: UploadFile = File(...), lang_type: int = 0):
     filepath = save_upload_file_tmp(file)
     if filepath.suffix == ".jpg" or filepath.suffix == ".jpeg":
         try:
@@ -68,7 +68,7 @@ def convert(file: UploadFile = File(...)):
         png_path = filepath
 
     try:
-        txt = ocr_read(str(png_path))
+        txt = ocr_read(str(png_path), lang_type)
         # return Response(content=img_enc.tostring(), media_type='image/png')
     except Exception as e:
         raise HTTPException(status_code=500, detail='Failed to ocr read.')
@@ -94,11 +94,11 @@ def jpg_to_png(jpg) -> Path:
     png_path = Path(png)
     return png_path
 
-def ocr_read(png_path):
+def ocr_read(png_path, lang_type):
     tools = pyocr.get_available_tools()
     tool = tools[0]
     langs = tool.get_available_languages()
-    lang = langs[0]
+    lang = langs[lang_type]
     img = Image.open(png_path)
     txt = tool.image_to_string(
         img,
